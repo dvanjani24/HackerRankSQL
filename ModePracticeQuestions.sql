@@ -41,6 +41,43 @@ count(1)
 from benn.college_football_players
 group by name_split;
 
+/*
+Write a query that displays player names, school names and conferences for schools in the "FBS (Division I-A Teams)" division.
+*/
+
+select p.player_name, p.school_name, t.conference 
+from benn.college_football_players p 
+inner join benn.college_football_teams t ON p.school_name = t.school_name 
+where t.division = 'FBS (Division I-A Teams)'
+
+/*
+Count the number of unique companies (don't double-count companies) and unique acquired companies by state. Do not include results for which there is no state data, and order by the number of acquired companies from highest to lowest.
+*/
+
+SELECT companies.state_code,
+       COUNT(DISTINCT companies.permalink) AS unique_companies,
+       COUNT(DISTINCT acquisitions.company_permalink) AS unique_companies_acquired
+  FROM tutorial.crunchbase_companies companies
+  LEFT JOIN tutorial.crunchbase_acquisitions acquisitions
+    ON companies.permalink = acquisitions.company_permalink
+ WHERE companies.state_code IS NOT NULL
+ GROUP BY 1
+ ORDER BY 3 DESC
 
 
+/*
+Cities with more customer's than average
+*/
 
+
+Select country.country_name, city.city_name, count(customer.customer_name)
+from country
+inner join city on city.country_id = country.id
+inner join customer on customer.city_id = city.id
+group by country.country_name, city.city_name
+having count(customer.customer_name) > 
+(
+  Select count(customer.customer_name) / count(city.city_name) as avg_per_city
+  from city
+  inner join customer on customer.city_id = city.id
+) 
