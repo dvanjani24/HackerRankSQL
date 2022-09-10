@@ -21,3 +21,48 @@ Note: CITY.CountryCode and COUNTRY.Code are matching key columns.
 select country.continent, floor(avg(city.population))
 from country inner join city on country.code = city.countrycode
 group by country.continent;
+
+/*
+Generate the following two result sets:
+
+Query an alphabetically ordered list of all names in OCCUPATIONS, immediately followed by the first letter of each profession as a parenthetical (i.e.: enclosed in parentheses). For example: AnActorName(A), ADoctorName(D), AProfessorName(P), and ASingerName(S).
+Query the number of ocurrences of each occupation in OCCUPATIONS. Sort the occurrences in ascending order, and output them in the following format:
+
+There are a total of [occupation_count] [occupation]s.
+where [occupation_count] is the number of occurrences of an occupation in OCCUPATIONS and [occupation] is the lowercase occupation name. If more than one Occupation has the same [occupation_count], they should be ordered alphabetically.
+*/
+
+
+select concat(name,'(',left(occupation,1),')') from occupations
+order by name asc;
+
+select concat('There are a total of ', count(occupation), ' ', lower(occupation),'s.') from occupations
+group by occupation
+order by count(occupation), lower(occupation);
+
+/*
+Pivot the Occupation column in OCCUPATIONS so that each Name is sorted alphabetically and displayed underneath its corresponding Occupation. The output column headers should be Doctor, Professor, Singer, and Actor, respectively.
+
+Note: Print NULL when there are no more names corresponding to an occupation.
+*/
+
+
+SET @d = 0, @p = 0, @s = 0, @a = 0;
+SELECT MIN(DOCTOR_NAMES), MIN(PROFESSOR_NAMES), MIN(SINGER_NAMES), MIN(ACTOR_NAMES)
+FROM
+  (
+    SELECT
+      CASE WHEN OCCUPATION = 'Doctor' THEN NAME END AS DOCTOR_NAMES,
+      CASE WHEN OCCUPATION = 'Professor' THEN NAME END AS PROFESSOR_NAMES,
+      CASE WHEN OCCUPATION = 'Singer' THEN NAME END AS SINGER_NAMES,
+      CASE WHEN OCCUPATION = 'Actor' THEN NAME END AS ACTOR_NAMES,
+      CASE
+        WHEN OCCUPATION = 'Doctor' THEN (@d := @d + 1)
+        WHEN OCCUPATION = 'Professor' THEN (@p := @p + 1)
+        WHEN OCCUPATION = 'Singer' THEN (@s := @s + 1)
+        WHEN OCCUPATION = 'Actor' THEN (@a := @a + 1)
+      END AS ROW_NUM
+    FROM OCCUPATIONS
+    ORDER BY NAME
+  ) AS TEMP
+GROUP BY ROW_NUM;
