@@ -66,3 +66,43 @@ FROM
     ORDER BY NAME
   ) AS TEMP
 GROUP BY ROW_NUM;
+
+/*
+Write a query to output the names of those students whose best friends got offered a higher salary than them. Names must be ordered by the salary amount offered to the best friends. It is guaranteed that no two students got same salary offer.
+*/
+
+select s.name from students s 
+join friends f on s.id = f.id
+join packages p on f.id = p.id
+join packages p2 on p2.id = f.friend_id
+where p.salary < p2.salary
+order by p2.salary;        
+
+/*
+Two pairs (X1, Y1) and (X2, Y2) are said to be symmetric pairs if X1 = Y2 and X2 = Y1.
+
+Write a query to output all such symmetric pairs in ascending order by the value of X. List the rows such that X1 ≤ Y1.
+*/
+
+select f.X, f.Y from functions f
+where f.X = f.Y and (select count(*) from functions where X = f.X and Y = f.Y)>1
+union
+select f.X, f.Y from functions f
+where exists(select X,Y from functions where f.Y = X and f.X = Y and f.X < X)
+order by X;
+
+/*
+Write an SQL query to report the nth highest salary from the Employee table. If there is no nth highest salary, the query should report null.
+
+The query result format is in the following example.
+*/
+
+CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
+BEGIN
+RETURN(
+select distinct salary from 
+(select salary, dense_rank() over (order by salary desc) as r from employee) e
+    where r = N
+  );
+END
+
