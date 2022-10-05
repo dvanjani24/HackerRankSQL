@@ -106,3 +106,104 @@ select distinct salary from
   );
 END
 
+/*
+Write an SQL query to find all numbers that appear at least three times consecutively.
+
+Return the result table in any order.
+
+The query result format is in the following example.
+*/
+
+
+with temp_table as(
+select num, 
+@counter := if(@prev_num = num, @counter + 1, 1) as counter, 
+@prev_num := num from logs,
+(select @counter := 0, @prev_num := 0) vars)
+
+select distinct num as ConsecutiveNums from temp_table
+where counter >= 3;
+
+/*
+Write an SQL query to find employees who have the highest salary in each of the departments.
+*/
+
+select d.name as Department, e.name as Employee, e.salary as Salary from employee e
+join department d on e.departmentid = d.id
+where e.salary = (select max(salary) from employee e2
+                 where e2.departmentId = e.departmentId)
+
+/*
+A company's executives are interested in seeing who earns the most money in each of the company's departments. A high earner in a department is an employee who has a salary in the top three unique salaries for that department.
+
+Write an SQL query to find the employees who are high earners in each of the departments.
+*/
+
+with temp as
+(select d.name as Department, e.name as Employee, e.salary as Salary, 
+ dense_rank() over (partition by d.name order by salary desc) as sal_rank
+from employee e join department d on e.departmentid = d.id)
+
+select Department, Employee, Salary from temp
+where sal_rank <= 3
+
+/*
+The cancellation rate is computed by dividing the number of canceled (by client or driver) requests with unbanned users by the total number of requests with unbanned users on that day.
+
+Write a SQL query to find the cancellation rate of requests with unbanned users (both client and driver must not be banned) each day between "2013-10-01" and "2013-10-03". Round Cancellation Rate to two decimal points.
+
+Return the result table in any order.
+
+The query result format is in the following example.
+*/
+
+with unbanned_temp as (
+select * from trips
+where client_id not in (select users_id from users where banned = 'Yes')
+and driver_id not in (select users_id from users where banned = 'Yes')
+and request_at in ("2013-10-01", "2013-10-02", "2013-10-03"))
+
+select request_at as Day,
+round(sum(case when unbanned_temp.status like 'cancelled%' then 1 else 0 end)/count(unbanned_temp.status),2) as 'Cancellation Rate' from unbanned_temp
+group by request_at
+
+/*
+Each node in the tree can be one of three types:
+
+"Leaf": if the node is a leaf node.
+"Root": if the node is the root of the tree.
+"Inner": If the node is neither a leaf node nor a root node.
+Write an SQL query to report the type of each node in the tree.
+
+Return the result table ordered by id in ascending order.
+
+The query result format is in the following example.
+*/
+
+select id, 
+case
+when p_id is null then 'Root'
+when id in (select p_id from tree) then 'Inner'
+else 'Leaf' end as type
+from tree
+order by id asc
+
+/*
+Write an SQL query to report the Capital gain/loss for each stock.
+
+The Capital gain/loss of a stock is the total gain or loss after buying and selling the stock one or many times.
+
+Return the result table in any order.
+
+The query result format is in the following example.
+*/
+
+select s1.stock_name, (sell_price - buy_price) as capital_gain_loss from
+(select stock_name, operation, sum(price) sell_price from stocks group by stock_name, operation having operation = 'Sell') s1,
+(select stock_name, operation, sum(price) buy_price from stocks group by stock_name, operation having operation = 'Buy') s2
+where s1.stock_name = s2.stock_name
+
+select stock_name,
+sum(case when operation = 'Buy' then -price else price end) as capital_gain_loss
+from stocks
+group by stock_name
